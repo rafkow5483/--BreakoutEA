@@ -77,6 +77,8 @@ input double InpMaxSpreadPips = 2.0; // Maksymalny spread w pipsach przy którym
 
 //	Input point High/Low of previous candles
 input int						InpEntryLookback					=	15;					//	Entry price lookback
+input double InpEntryOffsetPips = 3.0;     // Odległość od high/low w pipsach (offset)
+
 
 
 
@@ -407,22 +409,27 @@ void OnTick() {
    double mainHi    = iHigh(Symbol(), Period(), 1);
    double mainLo    = iLow(Symbol(), Period(), 1);
 
+   double point = SymbolInfoDouble(Symbol(), SYMBOL_POINT);
+   double offset = InpEntryOffsetPips * point;
+   // ➕ Dodane: offset 3 pipsy
+
    if (anchorMode == ORDER_TYPE_BUY) {
       if (mainLo <= mainFast) {
-         double entryPrice = iHigh(Symbol(), Period(), iHighest(Symbol(), Period(), MODE_HIGH, InpEntryLookback, 2));
-         double exitPrice  = entryPrice - (InpStopLossPips * SymbolInfoDouble(Symbol(), SYMBOL_POINT));
-         double tpPrice    = entryPrice + (InpTakeProfitPips * SymbolInfoDouble(Symbol(), SYMBOL_POINT));
+         double entryPrice = iHigh(Symbol(), Period(), iHighest(Symbol(), Period(), MODE_HIGH, InpEntryLookback, 2)) + offset;
+         double exitPrice  = entryPrice - (InpStopLossPips * point);
+         double tpPrice    = entryPrice + (InpTakeProfitPips * point);
 
          gTarget.entryPrice = entryPrice;
          gTarget.sl         = exitPrice;
          gTarget.tp         = tpPrice;
          gTarget.type       = ORDER_TYPE_BUY;
       }
-   } else if (anchorMode == ORDER_TYPE_SELL) {
+   } 
+   else if (anchorMode == ORDER_TYPE_SELL) {
       if (mainHi >= mainFast) {
-         double entryPrice = iLow(Symbol(), Period(), iLowest(Symbol(), Period(), MODE_LOW, InpEntryLookback, 2));
-         double exitPrice  = entryPrice + (InpStopLossPips * SymbolInfoDouble(Symbol(), SYMBOL_POINT));
-         double tpPrice    = entryPrice - (InpTakeProfitPips * SymbolInfoDouble(Symbol(), SYMBOL_POINT));
+         double entryPrice = iLow(Symbol(), Period(), iLowest(Symbol(), Period(), MODE_LOW, InpEntryLookback, 2)) - offset;
+         double exitPrice  = entryPrice + (InpStopLossPips * point);
+         double tpPrice    = entryPrice - (InpTakeProfitPips * point);
 
          gTarget.entryPrice = entryPrice;
          gTarget.sl         = exitPrice;
